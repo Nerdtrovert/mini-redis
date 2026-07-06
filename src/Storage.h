@@ -3,6 +3,8 @@
 #include<string>
 #include<iostream>
 #include<optional>
+#include<fstream>
+#include<sstream>
 
 class Storage{
     private:
@@ -15,4 +17,6 @@ class Storage{
     std::optional<std::string> get(const std::string &key);
     void del(const std::string &key);
     const std::unordered_map<std::string, std::string> &getAll() const;
+    void save();
+    void load();
 };

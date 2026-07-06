@@ -16,9 +16,39 @@ const std::unordered_map<std::string, std::string>& Storage::getAll() const{
     return internal_map;
 };
 
-
 void Storage::del(const std::string &key){
     auto it = internal_map.find(key);
     if(it != internal_map.end())
         internal_map.erase(it);
+}
+
+void Storage::save(){
+    std::ofstream file("redis.txt");
+    if (!file){
+        std::cout << "ERROR Saving" << std::endl;
+        return;
+    }
+    std::string line;
+    for (const auto &[key, value] : internal_map){
+        file << key << "," << value << "\n";
+    }
+    file.close();
+}
+
+void Storage::load(){
+    internal_map.clear();
+    std::ifstream file("redis.txt");
+    if (!file){
+        std::cout << "ERROR Loading: FILE doesnt exist" << std::endl;
+        return;
+    }
+    std::string line;
+    while(getline(file, line)){
+        std::stringstream ss(line);
+        std::string get_key, get_val;
+        getline(ss,get_key,',');
+        getline(ss,get_val);
+        set(get_key,get_val);
+    }
+    file.close();
 }
