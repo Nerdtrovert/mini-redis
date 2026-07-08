@@ -69,7 +69,7 @@ std::string CommandExecutor::execute(const Command& cmd){
     }
     else if (cmd.command == "COUNT"){
         size_t count = db.size();
-        return std::to_string(count);
+        return "OK "+std::to_string(count);
     }
     else if(cmd.command == "HELP"){
         std::string cmds="Available commands:\nSET <key> <value>\nGET <key>\nDEL <key>\nEXISTS <key>\nLIST\nSAVE\nLOAD\nCLEAR\nCOUNT\nEXIT";
