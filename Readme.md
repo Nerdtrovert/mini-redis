@@ -1,121 +1,235 @@
-**Mini Redis (C++)**
+# Mini Redis (C++)
 
-A Redis-inspired key-value store built from scratch in Modern C++ as part of my Systems Software Engineering learning roadmap.
+A Redis-inspired in-memory key-value store built from scratch in Modern C++ as part of my Systems Software Engineering learning roadmap.
 
-Current Status: Phase 0 – CLI Key-Value Store
+> **Current Status:** Phase 2 – Single-Threaded TCP Server
 
-**Overview**
+---
 
-This project is not intended to be a feature-complete Redis clone. Instead, it is a step-by-step implementation to understand the core ideas behind in-memory databases, networking, operating systems, and systems software.
+## Overview
 
-The project will gradually evolve from a simple command-line application into a TCP-based server supporting multiple clients, persistence, and concurrency.
+Mini Redis is a learning project focused on understanding how an in-memory database works internally rather than cloning Redis feature-for-feature.
 
-Current Features
+The project is being developed incrementally to explore concepts in:
 
-* In-memory key-value storage
-* SET command
-* GET command
-* DEL command
-* LIST command
-* Built using std::unordered_map
-* Encapsulated storage through a dedicated Storage class
-* Uses std::optional to safely represent missing keys
-* Separation between the storage layer and presentation (CLI)
+- Modern C++
+- Linux System Programming
+- TCP Networking
+- Data Structures
+- Operating Systems
+- Systems Software Design
 
-Project Structure
+Each phase introduces one major systems concept while keeping the codebase simple and easy to understand.
 
+---
+
+# Features
+
+### Storage
+
+- In-memory key-value store
+- `SET`
+- `GET`
+- `DEL`
+- `LIST`
+
+### Persistence
+
+- `SAVE`
+- `LOAD`
+- File-based storage
+- Simple serialization format
+
+### Networking
+
+- TCP server
+- Single-threaded architecture
+- Multiple commands per client connection
+- Request-response communication using sockets
+
+### Architecture
+
+- Separate Storage layer
+- Parser for command processing
+- CLI utilities
+- TCP transport independent of storage logic
+
+---
+
+# Project Structure
+
+```text
 mini-redis/
 │
 ├── src/
 │   ├── main.cpp
 │   ├── Storage.h
 │   ├── Storage.cpp
-|   ├── CLI.h
+│   ├── Parser.h
+│   ├── Parser.cpp
+│   ├── CLI.h
 │   └── CLI.cpp
-| 
+│
+├── redis.txt
 └── README.md
+```
 
-Technologies
+---
 
-* C++17
-* STL
-* std::unordered_map
-* std::optional
+# Supported Commands
 
-Learning Goals
+```text
+SET <key> <value>
 
-This project is designed to build practical understanding of:
+GET <key>
 
-* Modern C++
-* Data structures
-* API design
-* Object-oriented design
-* Memory management
-* Linux development workflow
-* Networking
-* TCP sockets
-* Distributed systems
-* Systems software engineering
+DEL <key>
 
-Roadmap
+LIST
 
-✅ Phase 0 – CLI Key-Value Store
+SAVE
 
-* SET
-* GET
-* DEL
-* LIST
+LOAD
 
-⏳ Phase 1 – Command Parser
+EXIT
+```
 
-* Parse commands like:
-    * SET key value
-    * GET key
-    * DEL key
-    * LIST
-* Remove menu-driven interface
+---
 
-⏳ Phase 2 – TCP Server
+# Technologies
 
-* socket()
-* bind()
-* listen()
-* accept()
-* recv()
-* send()
-* Single client support
+- C++17
+- STL
+- `std::unordered_map`
+- `std::optional`
+- POSIX Socket API
+- Linux System Calls
 
-⏳ Phase 3 – Persistence & Improvements
+---
 
-* Save and load data
-* Logging
-* Better command parsing
-* Error handling
-* Benchmarking
+# Concepts Learned
 
-⏳ Phase 4 – Concurrency
+## Modern C++
 
-* Multi-client support
-* Thread-safe storage
-* Synchronization
-* Performance improvements
+- Classes
+- References
+- `std::optional`
+- `std::unordered_map`
+- File I/O
+- String Streams
 
-Build
+## Systems Programming
+
+- Command Parsing
+- REPL Design
+- Layered Architecture
+- TCP Socket Programming
+- Client-Server Communication
+- Serialization
+- Persistent Storage
+
+---
+
+# Development Roadmap
+
+## ✅ Phase 0 — Storage Engine
+
+- In-memory key-value store
+- SET
+- GET
+- DEL
+- LIST
+
+---
+
+## ✅ Phase 1 — CLI & Command Parser
+
+- Menu removed
+- Command parser
+- REPL interface
+- Input validation
+
+---
+
+## ✅ Phase 2 — TCP Server
+
+- socket()
+- bind()
+- listen()
+- accept()
+- recv()
+- send()
+- Persistent client connection
+- Request-response communication
+
+---
+
+## ⏳ Phase 3 — Improvements
+
+- Better command execution architecture
+- Improved parser
+- Logging
+- Configuration
+- Benchmarking
+- Better error handling
+
+---
+
+## ⏳ Phase 4 — Concurrency
+
+- Multiple clients
+- Multithreading
+- Thread-safe storage
+- Synchronization
+- Performance improvements
+
+---
+
+# Build
 
 Compile using g++:
 
-g++ -std=c++17 src/main.cpp src/Storage.cpp -o mini-redis
+```bash
+g++ -std=c++17 src/*.cpp -o mini-redis
+```
 
 Run:
 
+```bash
 ./mini-redis
+```
 
-Why This Project?
+---
 
-The objective is not just to recreate Redis, but to understand why it is designed the way it is.
+# Why This Project?
 
-Each phase introduces one new systems concept at a time, allowing the project to grow naturally while building a strong foundation in systems programming.
+The goal of this project is not simply to recreate Redis, but to understand the engineering decisions behind it.
 
-⸻
+Rather than building everything at once, each version introduces one systems programming concept:
 
-Author: Prajwal Navada G P
+- Data structures
+- Parsing
+- Persistence
+- Networking
+- Concurrency
+
+This incremental approach mirrors how production systems evolve while providing a practical way to learn modern C++ and systems software engineering.
+
+---
+
+## Future Features
+
+- Command dispatcher
+- RESP (Redis Serialization Protocol)
+- Thread pool
+- Configurable server port
+- TTL support
+- Transactions
+- Publish/Subscribe
+- Benchmarking
+
+---
+
+# Author
+
+**Prajwal Navada G P**
