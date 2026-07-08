@@ -22,4 +22,5 @@ class Storage{
     void load();
     bool load_status();
     std::size_t size() const;
+    void clear();
 };

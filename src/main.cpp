@@ -89,8 +89,9 @@ int main(){
                 send(
                     client_fd, response.c_str(),response.size() , 0);
 
-            }else{
-                break;
+            }else if (bytes<0){
+                perror("recv");
+                return 0;
             }
         }
         close(client_fd); cerr<<"Client disconnected..."<<endl;

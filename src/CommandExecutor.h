@@ -11,7 +11,6 @@
 
 class CommandExecutor{ 
     public:  
-    std::string success = "OK", invalid_format = "INVALID COMMAND";
     Storage db; 
     std::string execute (const Command& cmd);
 };

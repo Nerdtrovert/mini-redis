@@ -28,6 +28,7 @@ void Storage::save(){
         file_load=false;
         return;
     }
+    file_load = true;
     std::string line;
     for (const auto &[key, value] : internal_map){
         file << key << "," << value << "\n";
@@ -41,6 +42,7 @@ void Storage::load(){
     if (!file){
         file_load=false;
     }
+    file_load = true;
     std::string line;
     while(getline(file, line)){
         std::stringstream ss(line);
@@ -58,4 +60,8 @@ size_t Storage::size() const{
 
 bool Storage::load_status(){
     return file_load;
+}
+
+void Storage::clear(){
+    internal_map.clear();
 }
