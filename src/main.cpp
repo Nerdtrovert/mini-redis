@@ -1,6 +1,7 @@
-#include "Storage.h"
-#include "CLI.h"
+#include "Command.h"
+#include "CommandExecutor.h"
 #include "Parser.h"
+
 #include<iostream>
 #include<string>
 #include<optional>
@@ -15,11 +16,9 @@ using std::endl;
 using std::cerr;
 
 int main(){
-    Storage db;
-    CLI cli;
     Parser parser;
-    std::string invalid_reply = "INVALID COMMAND";
-    std::string success_status = "OK";
+    CommandExecutor executor;
+    std::string response;
 
     cout << "Mini redis" << endl;
     int server_fd = socket(AF_INET, SOCK_STREAM, 0); 
@@ -82,72 +81,17 @@ int main(){
             {
                 buffer[bytes] = '\0';
                 std::string line(buffer);
+                // call command executor
+                Command cmd = parser.parse(line);
 
-                parser.parse(line);
-                if (parser.command == "SET")
-                {
-                    if (parser.arg && parser.value){
-                        db.set(*parser.arg, *parser.value);
-                        send(
-                            client_fd, success_status.c_str(),success_status.size(), 0);
-                    }
-                    else
-                    {
-                        send(
-                            client_fd, invalid_reply.c_str(), invalid_reply.size(), 0);
-                    }
-                }
-                else if (parser.command == "GET")
-                {
-                    if (parser.arg)
-                    {
-                        std::string reply = db.get(*parser.arg).value_or("NOT FOUND.");
-                        send(
-                            client_fd,
-                            reply.c_str(),
-                            reply.size(),
-                            0);
-                    }
-                    else
-                    {
-                        send(
-                            client_fd, invalid_reply.c_str(), invalid_reply.size(), 0);
-                    }
-                }
-                else if (parser.command == "LIST")
-                {
-                    cli.display(db.getAll(), client_fd);
-                }
-                else if (parser.command == "DEL")
-                {
-                    if (parser.arg){
-                        db.del(*parser.arg);
-                        send(
-                            client_fd, success_status.c_str(), success_status.size(), 0);
-                        }else{
-                        send(
-                            client_fd, invalid_reply.c_str(), invalid_reply.size(), 0);
-                }
-            }else if(parser.command=="LOAD"){ 
-                std::string loaded = "LOADED";
+                response = executor.execute(cmd);
+                if(response == "SESSION TERMINATED") break;
                 send(
-                    client_fd, loaded.c_str(), loaded.size(), 0);
-                db.load();
+                    client_fd, response.c_str(),response.size() , 0);
+
+            }else{
+                break;
             }
-            else if (parser.command == "SAVE"){
-                std::string saved = "SAVED";
-                send(
-                    client_fd, saved.c_str(), saved.size(), 0);
-                db.save();
-            }
-            else if(parser.command == "EXIT") break;
-            else
-                send(
-                    client_fd, invalid_reply.c_str(), invalid_reply.size(), 0);
-        }else{
-            send(
-                client_fd, invalid_reply.c_str(), invalid_reply.size(), 0);
-        }
         }
         close(client_fd); cerr<<"Client disconnected..."<<endl;
     }cerr<<"Server closed..."<<endl;

@@ -25,7 +25,7 @@ void Storage::del(const std::string &key){
 void Storage::save(){
     std::ofstream file("redis.txt");
     if (!file){
-        std::cout << "ERROR Saving" << std::endl;
+        file_load=false;
         return;
     }
     std::string line;
@@ -39,8 +39,7 @@ void Storage::load(){
     internal_map.clear();
     std::ifstream file("redis.txt");
     if (!file){
-        std::cout << "ERROR Loading: FILE doesnt exist" << std::endl;
-        return;
+        file_load=false;
     }
     std::string line;
     while(getline(file, line)){
@@ -51,4 +50,12 @@ void Storage::load(){
         set(get_key,get_val);
     }
     file.close();
+}
+
+size_t Storage::size() const{
+    return internal_map.size();
+}
+
+bool Storage::load_status(){
+    return file_load;
 }

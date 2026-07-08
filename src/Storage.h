@@ -12,6 +12,7 @@ class Storage{
     public:
         std::string key;
         std::string value;
+        bool file_load=true;
 
     void set(const std::string &key, const std::string &value);
     std::optional<std::string> get(const std::string &key);
@@ -19,4 +20,6 @@ class Storage{
     const std::unordered_map<std::string, std::string> &getAll() const;
     void save();
     void load();
+    bool load_status();
+    std::size_t size() const;
 };

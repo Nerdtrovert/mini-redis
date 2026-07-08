@@ -3,11 +3,9 @@
 #include<iostream>
 #include<sstream>
 #include <optional>
+#include "Command.h"
 
 class Parser{
     public:
-        std::string command;
-        std::optional<std::string> arg, value;
-        void parse(const std::string &line);
-        void reset();
+        Command parse(const std::string &line);
 };
