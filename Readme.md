@@ -60,18 +60,17 @@ Each phase introduces one major systems concept while keeping the codebase simpl
 
 ```text
 mini-redis/
-│
 ├── src/
-│   ├── main.cpp
+│   ├── main.cpp                # server loop + connection handling
 │   ├── Storage.h
 │   ├── Storage.cpp
 │   ├── Parser.h
 │   ├── Parser.cpp
-│   ├── CLI.h
-│   └── CLI.cpp
-│
-├── redis.txt
-└── README.md
+│   ├── Command.h
+│   ├── CommandExecutor.h
+│   └── CommandExecutor.cpp
+├── redis.txt                   # persistence file used by SAVE/LOAD
+└── Readme.md
 ```
 
 ---
@@ -80,17 +79,15 @@ mini-redis/
 
 ```text
 SET <key> <value>
-
 GET <key>
-
 DEL <key>
-
 LIST
-
+EXISTS <key>
+COUNT
+CLEAR
 SAVE
-
 LOAD
-
+HELP
 EXIT
 ```
 
@@ -198,6 +195,33 @@ Run:
 ```bash
 ./mini-redis
 ```
+
+---
+
+# Testing
+
+Manual testing (recommended):
+
+1. Start the server: `./mini-redis`
+2. Connect with netcat or telnet from another terminal:
+   - `nc localhost 8080` or `telnet localhost 8080`
+3. Try commands (each command followed by Enter):
+   - `SET mykey hello` -> `OK`
+   - `GET mykey` -> `OK hello`
+   - `COUNT` -> `OK 1`
+   - `LIST` -> `mykey : hello`
+   - `SAVE` -> `SAVED` (check that `redis.txt` exists)
+   - `EXIT` -> connection closes
+
+Quick integration check (bash):
+
+```bash
+printf "SET foo bar\nGET foo\nEXIT\n" | nc localhost 8080
+```
+
+Notes on automated tests:
+- No unit tests are included yet. Consider adding tests that exercise Storage and CommandExecutor directly.
+- For integration tests, start the server in a background process and use a script to open a TCP connection, send commands and validate replies.
 
 ---
 
