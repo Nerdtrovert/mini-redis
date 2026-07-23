@@ -1,88 +1,28 @@
 # Mini Redis (C++)
 
-A Redis-inspired in-memory key-value store built from scratch in Modern C++ as part of my Systems Software Engineering learning roadmap.
-
-> **Current Status:** Phase 2 – Single-Threaded TCP Server
-
----
-
 ## Overview
 
-Mini Redis is a learning project focused on understanding how an in-memory database works internally rather than cloning Redis feature-for-feature.
+### What is it?
 
-The project is being developed incrementally to explore concepts in:
+Mini Redis is a Redis-inspired, in-memory key-value database written in modern C++. Designed as a substantial systems-programming project, it exposes a TCP server that accepts commands from standard clients such as `netcat` and maintains data in memory for fast access. The project implements a focused command set for creating, reading, deleting, listing, and managing keys, alongside simple file-based persistence through `SAVE` and `LOAD` operations. Its codebase is deliberately separated into parsing, command-execution, storage, and networking layers, making the flow from a client request to a database response easy to follow and extend. Rather than reproducing Redis feature-for-feature, Mini Redis concentrates on the core engineering ideas that make an in-memory database possible: efficient hash-based storage, protocol handling, serialization, socket programming, and persistent client connections. I built it to move beyond isolated C++ exercises and develop practical experience designing, implementing, and evolving a complete networked systems application from the ground up.
 
-- Modern C++
-- Linux System Programming
-- TCP Networking
-- Data Structures
-- Operating Systems
-- Systems Software Design
+## Features
 
-Each phase introduces one major systems concept while keeping the codebase simple and easy to understand.
+- In-memory key-value storage backed by `std::unordered_map`
+- Commands for creating, reading, deleting, listing, counting, and clearing keys
+- Simple file persistence with `SAVE` and `LOAD` using `redis.txt`
+- TCP server on port `8080`
+- Persistent client sessions that accept multiple commands per connection
+- Helpful responses for invalid or unknown commands
 
----
-
-# Features
-
-### Storage
-
-- In-memory key-value store
-- `SET`
-- `GET`
-- `DEL`
-- `LIST`
-
-### Persistence
-
-- `SAVE`
-- `LOAD`
-- File-based storage
-- Simple serialization format
-
-### Networking
-
-- TCP server
-- Single-threaded architecture
-- Multiple commands per client connection
-- Request-response communication using sockets
-
-### Architecture
-
-- Separate Storage layer
-- Parser for command processing
-- CLI utilities
-- TCP transport independent of storage logic
-
----
-
-# Project Structure
-
-```text
-mini-redis/
-├── src/
-│   ├── main.cpp                # server loop + connection handling
-│   ├── Storage.h
-│   ├── Storage.cpp
-│   ├── Parser.h
-│   ├── Parser.cpp
-│   ├── Command.h
-│   ├── CommandExecutor.h
-│   └── CommandExecutor.cpp
-├── redis.txt                   # persistence file used by SAVE/LOAD
-└── Readme.md
-```
-
----
-
-# Supported Commands
+### Supported commands
 
 ```text
 SET <key> <value>
 GET <key>
 DEL <key>
-LIST
 EXISTS <key>
+LIST
 COUNT
 CLEAR
 SAVE
@@ -91,169 +31,114 @@ HELP
 EXIT
 ```
 
----
+## Architecture
 
-# Technologies
+```text
+TCP client (nc / telnet)
+          |
+          v
+  TCP server (main.cpp)
+          |
+          v
+      Parser
+          |
+          v
+  CommandExecutor
+       |       |
+       v       v
+   Storage   redis.txt
+  (memory)  (SAVE/LOAD)
+```
+
+The TCP layer receives a command, the parser converts it into a command object, and the executor applies it to the storage layer or persistence file.
+
+## Tech Stack
 
 - C++17
-- STL
-- `std::unordered_map`
-- `std::optional`
-- POSIX Socket API
-- Linux System Calls
+- C++ Standard Library (`std::unordered_map`, `std::optional`, file streams, string streams)
+- POSIX socket APIs (`socket`, `bind`, `listen`, `accept`, `recv`, `send`)
+- Linux/macOS-compatible command-line tools such as `nc`
 
----
+## Project Structure
 
-# Concepts Learned
+```text
+mini-redis/
+├── src/
+│   ├── main.cpp                # TCP server and client connection loop
+│   ├── Command.h               # Command data model
+│   ├── Parser.h / Parser.cpp   # Text command parsing
+│   ├── CommandExecutor.h/.cpp  # Command dispatch and responses
+│   └── Storage.h / Storage.cpp # In-memory store and persistence
+├── tests/
+│   └── test_client.cpp         # Client test scaffold
+├── redis.txt                   # Created/used by SAVE and LOAD
+└── Readme.md
+```
 
-## Modern C++
+## How to Build
 
-- Classes
-- References
-- `std::optional`
-- `std::unordered_map`
-- File I/O
-- String Streams
-
-## Systems Programming
-
-- Command Parsing
-- REPL Design
-- Layered Architecture
-- TCP Socket Programming
-- Client-Server Communication
-- Serialization
-- Persistent Storage
-
----
-
-# Development Roadmap
-
-## ✅ Phase 0 — Storage Engine
-
-- In-memory key-value store
-- SET
-- GET
-- DEL
-- LIST
-
----
-
-## ✅ Phase 1 — CLI & Command Parser
-
-- Menu removed
-- Command parser
-- REPL interface
-- Input validation
-
----
-
-## ✅ Phase 2 — TCP Server
-
-- socket()
-- bind()
-- listen()
-- accept()
-- recv()
-- send()
-- Persistent client connection
-- Request-response communication
-
----
-
-## ⏳ Phase 3 — Improvements
-
-- Better command execution architecture
-- Improved parser
-- Logging
-- Configuration
-- Benchmarking
-- Better error handling
-
----
-
-## ⏳ Phase 4 — Concurrency
-
-- Multiple clients
-- Multithreading
-- Thread-safe storage
-- Synchronization
-- Performance improvements
-
----
-
-# Build
-
-Compile using g++:
+Use a C++17-compatible compiler:
 
 ```bash
 g++ -std=c++17 src/*.cpp -o mini-redis
 ```
 
-Run:
+## How to Run
+
+Start the server from the project root:
 
 ```bash
 ./mini-redis
 ```
 
----
+The server listens on `localhost:8080`. In another terminal, connect with netcat:
 
-# Testing
+```bash
+nc localhost 8080
+```
 
-Manual testing (recommended):
+## Example Usage
 
-1. Start the server: `./mini-redis`
-2. Connect with netcat or telnet from another terminal:
-   - `nc localhost 8080` or `telnet localhost 8080`
-3. Try commands (each command followed by Enter):
-   - `SET mykey hello` -> `OK`
-   - `GET mykey` -> `OK hello`
-   - `COUNT` -> `OK 1`
-   - `LIST` -> `mykey : hello`
-   - `SAVE` -> `SAVED` (check that `redis.txt` exists)
-   - `EXIT` -> connection closes
+```text
+SET language cpp
+OK
+GET language
+OK cpp
+COUNT
+OK 1
+LIST
+language : cpp
+SAVE
+SAVED
+EXIT
+```
 
-Quick integration check (bash):
+For a quick non-interactive check:
 
 ```bash
 printf "SET foo bar\nGET foo\nEXIT\n" | nc localhost 8080
 ```
 
-Notes on automated tests:
-- No unit tests are included yet. Consider adding tests that exercise Storage and CommandExecutor directly.
-- For integration tests, start the server in a background process and use a script to open a TCP connection, send commands and validate replies.
+## Future Improvements
 
----
+- Add unit and integration tests
+- Use the Redis Serialization Protocol (RESP)
+- Support configurable ports and persistence paths
+- Improve validation and error handling
+- Add concurrency, thread-safe storage, and a thread pool
+- Add TTL expiration, transactions, and publish/subscribe
+- Add logging, benchmarking, and configuration support
 
-# Why This Project?
+## Learning Outcomes
 
-The goal of this project is not simply to recreate Redis, but to understand the engineering decisions behind it.
+- Designing a small layered C++ application
+- Using hash maps and `std::optional` for in-memory storage
+- Parsing command-line-style input
+- Reading and writing a simple serialized file format
+- Building a TCP server with POSIX sockets
+- Managing a request-response protocol and persistent client connections
+- Incrementally evolving a systems project from storage to networking
 
-Rather than building everything at once, each version introduces one systems programming concept:
+## Author
 
-- Data structures
-- Parsing
-- Persistence
-- Networking
-- Concurrency
-
-This incremental approach mirrors how production systems evolve while providing a practical way to learn modern C++ and systems software engineering.
-
----
-
-## Future Features
-
-- Command dispatcher
-- RESP (Redis Serialization Protocol)
-- Thread pool
-- Configurable server port
-- TTL support
-- Transactions
-- Publish/Subscribe
-- Benchmarking
-
----
-
-# Author
-
-**Prajwal Navada G P**
+Prajwal Navada G P
