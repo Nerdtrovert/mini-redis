@@ -4,7 +4,6 @@
 
 #include<iostream>
 #include<string>
-#include<optional>
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include<unistd.h>
@@ -15,87 +14,100 @@ using std::cin;
 using std::endl;
 using std::cerr;
 
-int main(){
+namespace {
+constexpr int kPort = 8080;
+constexpr int kBacklog = 5;
+constexpr std::size_t kBufferSize = 1024;
+}
+
+int main() {
     Parser parser;
     CommandExecutor executor;
-    std::string response;
 
     cout << "Mini redis" << endl;
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0); 
+    const int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1){
-        cout << "Socket failed." << endl;
+        perror("socket");
         return 1;
     }
-    cerr<<"Server started..."<<endl;
+
+    const int reuse_address = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse_address, sizeof(reuse_address)) == -1) {
+        perror("setsockopt");
+        close(server_fd);
+        return 1;
+    }
+
+    cerr << "Server started..." << endl;
     sockaddr_in server_addr{};
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(8080);
+    server_addr.sin_port = htons(kPort);
 
     if (bind(server_fd, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr)) == -1){
-        std::cerr << "Bind failed\n";
+        perror("bind");
+        close(server_fd);
         return 1;
     }
 
-    if (listen(server_fd, 5) == -1){
-        cerr << "Listen failed" << endl;
+    if (listen(server_fd, kBacklog) == -1){
+        perror("listen");
+        close(server_fd);
         return 1;
     }
-    cout << "Server listening on port 8080...\n";
-    cerr<<"Server listening..."<<endl;
+    cout << "Server listening on port " << kPort << "...\n";
+    cerr << "Server listening..." << endl;
     sockaddr_in client_addr{};
-    socklen_t client_len = sizeof(client_addr);
 
-    while(true){
-        int client_fd = accept(
+    while (true) {
+        socklen_t client_len = sizeof(client_addr);
+        const int client_fd = accept(
             server_fd,
             reinterpret_cast<sockaddr *>(&client_addr), &client_len);
         if (client_fd == -1){
-            cerr << "Accept failed\n";
-            return 1;
+            perror("accept");
+            continue;
         }
-        else{
-            char ip_string[INET_ADDRSTRLEN];
-            inet_ntop(
-                AF_INET,
-                &(client_addr.sin_addr),
-                ip_string,
-                sizeof(ip_string));
-            std::string print_address(ip_string);
-            cout << "Client connected: " << print_address << endl;
-            cerr<<"Client connected..."<<endl;
+
+        char ip_string[INET_ADDRSTRLEN]{};
+        if (inet_ntop(AF_INET, &client_addr.sin_addr, ip_string, sizeof(ip_string)) != nullptr) {
+            cout << "Client connected: " << ip_string << endl;
         }
-        while (true){
-            char buffer[1025];
-            int bytes = recv(
+        cerr << "Client connected..." << endl;
+
+        while (true) {
+            char buffer[kBufferSize + 1]{};
+            const ssize_t bytes = recv(
                 client_fd,
                 buffer,
-                sizeof(buffer),
+                kBufferSize,
                 0);
-            if (bytes==0){
+            if (bytes == 0) {
                 cerr << "Client disconnected..." << endl;
                 break;
             }
-            if (bytes > 0)
-            {
+
+            if (bytes > 0) {
                 buffer[bytes] = '\0';
-                std::string line(buffer);
-                // call command executor
-                Command cmd = parser.parse(line);
+                const Command cmd = parser.parse(buffer);
+                const std::string response = executor.execute(cmd);
 
-                response = executor.execute(cmd);
-                if(response == "SESSION TERMINATED") break;
-                send(
-                    client_fd, response.c_str(),response.size() , 0);
+                if (response == "SESSION TERMINATED") {
+                    break;
+                }
 
-            }else if (bytes<0){
+                if (send(client_fd, response.c_str(), response.size(), 0) == -1) {
+                    perror("send");
+                    break;
+                }
+
+            } else {
                 perror("recv");
-                return 0;
+                break;
             }
         }
-        close(client_fd); cerr<<"Client disconnected..."<<endl;
-    }cerr<<"Server closed..."<<endl;
-    close(server_fd);
-    return 0;
+        close(client_fd);
+        cerr << "Client connection closed..." << endl;
+    }
 }

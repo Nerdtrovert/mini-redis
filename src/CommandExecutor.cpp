@@ -12,9 +12,9 @@ std::string CommandExecutor::execute(const Command& cmd){
     }
     else if (cmd.command == "GET"){
         if (cmd.arg){
-            auto reply = db.get(*cmd.arg);
+            const auto reply = db.get(*cmd.arg);
             if(!reply) return "ERROR Missing key";
-            return "OK " + db.get(*cmd.arg).value_or(" ");
+            return "OK " + *reply;
         }
         else{
             return "ERROR Usage: GET <key>";
@@ -23,8 +23,8 @@ std::string CommandExecutor::execute(const Command& cmd){
     else if(cmd.command == "EXISTS"){
         if (cmd.arg)
         {
-            std::string reply = db.get(*cmd.arg).value_or("NOT FOUND.");
-            if (reply == "NOT FOUND")
+            const auto reply = db.get(*cmd.arg);
+            if (!reply)
                 return "Does not Exist.";
             return "OK Exists";
         }
@@ -58,17 +58,17 @@ std::string CommandExecutor::execute(const Command& cmd){
     }
     else if (cmd.command == "LOAD"){
         db.load();
-        if(!db.load_status()) return "ERROR File not found";
+        if (!db.file_operation_succeeded()) return "ERROR Could not open redis.txt";
         return "LOADED";
     }
     else if (cmd.command == "SAVE"){
         db.save();
-        if (!db.load_status())
-            return "ERROR File not found";
+        if (!db.file_operation_succeeded())
+            return "ERROR Could not write redis.txt";
         return "SAVED";
     }
     else if (cmd.command == "COUNT"){
-        size_t count = db.size();
+        const std::size_t count = db.size();
         return "OK "+std::to_string(count);
     }
     else if(cmd.command == "HELP"){

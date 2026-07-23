@@ -4,7 +4,9 @@
 
 ### What is it?
 
-Mini Redis is a Redis-inspired, in-memory key-value database written in modern C++. Designed as a substantial systems-programming project, it exposes a TCP server that accepts commands from standard clients such as `netcat` and maintains data in memory for fast access. The project implements a focused command set for creating, reading, deleting, listing, and managing keys, alongside simple file-based persistence through `SAVE` and `LOAD` operations. Its codebase is deliberately separated into parsing, command-execution, storage, and networking layers, making the flow from a client request to a database response easy to follow and extend. Rather than reproducing Redis feature-for-feature, Mini Redis concentrates on the core engineering ideas that make an in-memory database possible: efficient hash-based storage, protocol handling, serialization, socket programming, and persistent client connections. I built it to move beyond isolated C++ exercises and develop practical experience designing, implementing, and evolving a complete networked systems application from the ground up.
+Mini Redis is a Redis-inspired, in-memory key-value database written in modern C++. It exposes a TCP server that accepts commands from clients such as `netcat`, keeps data in memory for fast access, and supports simple file persistence through `SAVE` and `LOAD`.
+
+I built Mini Redis to understand how in-memory databases work before exploring the Redis source code. The project focuses on the core ideas behind a small database server: hash-based storage, command parsing, socket programming, and persistence.
 
 ## Features
 
@@ -34,23 +36,27 @@ EXIT
 ## Architecture
 
 ```text
-TCP client (nc / telnet)
-          |
-          v
-  TCP server (main.cpp)
-          |
-          v
-      Parser
-          |
-          v
-  CommandExecutor
-       |       |
-       v       v
-   Storage   redis.txt
-  (memory)  (SAVE/LOAD)
+Client
+  |
+  v
+Socket Server (main.cpp)
+  |
+  v
+Parser
+  |
+  v
+CommandExecutor
+  |
+  v
+Storage ----> redis.txt
 ```
 
-The TCP layer receives a command, the parser converts it into a command object, and the executor applies it to the storage layer or persistence file.
+The socket server receives a client command and passes it to the parser. The parser creates a `Command` object, the executor chooses the operation, and storage reads or updates the in-memory map. `SAVE` and `LOAD` connect storage to `redis.txt`.
+
+- `main.cpp`: accepts TCP connections and sends responses.
+- `Parser`: splits a text request into a command, key, and optional value.
+- `CommandExecutor`: validates commands and coordinates each operation.
+- `Storage`: owns the in-memory key-value data and file persistence.
 
 ## Tech Stack
 
@@ -77,10 +83,11 @@ mini-redis/
 
 ## How to Build
 
-Use a C++17-compatible compiler:
+Build the server with CMake:
 
 ```bash
-g++ -std=c++17 src/*.cpp -o mini-redis
+cmake -S . -B build
+cmake --build build
 ```
 
 ## How to Run
@@ -88,7 +95,7 @@ g++ -std=c++17 src/*.cpp -o mini-redis
 Start the server from the project root:
 
 ```bash
-./mini-redis
+./build/mini-redis
 ```
 
 The server listens on `localhost:8080`. In another terminal, connect with netcat:

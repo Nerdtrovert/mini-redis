@@ -7,5 +7,5 @@
 
 class Parser{
     public:
-        Command parse(const std::string &line);
+        Command parse(const std::string &line) const;
 };

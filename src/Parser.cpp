@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-Command Parser::parse(const std::string &line){
+Command Parser::parse(const std::string &line) const {
     std::string command;
     std::optional<std::string> arg, value;
     std::stringstream ss(line);

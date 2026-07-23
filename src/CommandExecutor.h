@@ -10,7 +10,9 @@
 
 
 class CommandExecutor{ 
-    public:  
-    Storage db; 
+    private:
+    Storage db;
+
+    public:
     std::string execute (const Command& cmd);
 };
